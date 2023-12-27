@@ -8,6 +8,38 @@
 #include <unistd.h> // for close
 #include <pthread.h>
 
+int board[8][8];
+
+void show_board(int board[8][8]){
+    for (int i=7;i>=0;i--){
+        printf("  ---------------------------------\n");
+        printf("%d |", i+1);
+        for (int j=0;j<8;j++){
+            if (board[i][j]==-1){
+                printf("   |");
+            }
+            else if (board[i][j]==0){
+                printf(" . |");
+            }
+            else if (board[i][j]==1){
+                printf(" w |");
+            }
+            else if (board[i][j]==2){
+                printf(" b |");
+            }
+            else if (board[i][j]==3){
+                printf(" W |");
+            }
+            else if (board[i][j]==4){
+                printf(" B |");
+            }
+        }
+        printf("\n");
+    }
+    printf("  ---------------------------------\n");
+    printf("    a   b   c   d   e   f   g   h\n");
+}
+
 int main(){
 
   char message[1000];
@@ -36,32 +68,37 @@ int main(){
     //strcpy(message,"Hello");
     int msg_scanf_size;
 
-    for(;;){
 
-        msg_scanf_size=scanf("%s",message);
+    recv(clientSocket, board, sizeof(board), 0);
+    show_board(board);
+
+    for(;;){
+        
+
+        // msg_scanf_size = scanf("%s", message);
         char *s;
-        s=strstr(message,"exit");
-        if(s != NULL)
+        s = strstr(message, "exit");
+        if (s != NULL)
         {
             printf("Exiting\n");
             break;
 
-        }
+            }
 
-        if( send(clientSocket , message , strlen(message) , 0) < 0)
-        {
-                printf("Send failed\n");
-        }
+            if( send(clientSocket , message , strlen(message) , 0) < 0)
+            {
+                    printf("Send failed\n");
+            }
 
-        //Read the message from the server into the buffer
-        if(recv(clientSocket, buffer, 1024, 0) < 0)
-        {
-            printf("Receive failed\n");
-        }
-        //Print the received message
-        printf("Data received: %s\n",buffer);
+            //Read the message from the server into the buffer
+            if(recv(clientSocket, buffer, 1024, 0) < 0)
+            {
+                printf("Receive failed\n");
+            }
+            //Print the received message
+            printf("Data received: %s\n",buffer);
 
-        memset(&message, 0, sizeof (message));
+            memset(&message, 0, sizeof (message));
     }
 
     close(clientSocket);
