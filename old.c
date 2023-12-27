@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-// #include "funkcje.c"
 
 int board[8][8] = {{1,-1,1,-1,1,-1,1,-1},{-1,1,-1,1,-1,1,-1,1},{1,-1,1,-1,1,-1,1,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,2,-1,2,-1,2,-1,2},{2,-1,2,-1,2,-1,2,-1},{-1,2,-1,2,-1,2,-1,2}};
 // int board[8][8] = {{4,-1,4,-1,0,-1,4,-1},{-1,0,-1,0,-1,0,-1,0},{2,-1,0,-1,0,-1,0,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,3,-1,3,-1,3,-1,3}};
-int x_1, x_2;
-int y_1, y_2;
+int x_1, x_2, y_1, y_2;
 int white_pawns=12;
 int black_pawns=12;
 int white_kings=0;
 int black_kings=0;
+int game_over = 0;
+char x_1_char, x_2_char;
 
 // funkcja pokazująca plansze
 void show_board(int board[8][8]){
@@ -40,8 +40,7 @@ void show_board(int board[8][8]){
         printf("\n");
     }
     printf("  ---------------------------------\n");
-    printf("    1   2   3   4   5   6   7   8\n");
-    return;
+    printf("    a   b   c   d   e   f   g   h\n");
 }
 // funkcja przesuwająca pionki
 void move_pawn(int board[8][8], int x1, int y1, int x2, int y2){
@@ -49,8 +48,8 @@ void move_pawn(int board[8][8], int x1, int y1, int x2, int y2){
     int p=board[x1][y1];
     board[x1][y1]=0;
     board[x2][y2]=p;
-    return;
 }
+
 // sprawdzanie czy dany bialy pion moze wykonac dany ruch
 int can_move_white(int board[8][8], int x1, int y1, int x2, int y2){
     x1=x1-1;
@@ -109,6 +108,7 @@ int can_move_white(int board[8][8], int x1, int y1, int x2, int y2){
     }
     return 0;
 }
+
 // sprawdzanie czy czarny pion moze wykonać ruch
 int can_move_black(int board[8][8], int x1, int y1, int x2, int y2){
     x1=x1-1;
@@ -271,6 +271,7 @@ void jump(int board[8][8], int x1, int y1, int x2, int y2, int *pawns, int *king
     }
     return;
 }
+
 // sprawdzanie czy dany bialy pion moze bic
 int can_jump_white(int board[8][8], int x1, int y1, int x2, int y2){
     x1--;
@@ -356,6 +357,7 @@ int can_jump_white(int board[8][8], int x1, int y1, int x2, int y2){
     }
     return 0;
 }
+
 // sprawdzanie czy czarny pion moze bic
 int can_jump_black(int board[8][8], int x1, int y1, int x2, int y2){
     x1--;
@@ -442,7 +444,7 @@ int can_jump_black(int board[8][8], int x1, int y1, int x2, int y2){
     return 0;
 }
 // sprawdzanie czy jakikolwiek bialy pion moze bic
-int can_jump_white_all(int board[8][8]){
+int can_any_white_jump(int board[8][8]){
     for (int i=1;i<9;i++){
         for (int j=1;j<9;j++){
             if (board[i-1][j-1]==1){
@@ -464,7 +466,7 @@ int can_jump_white_all(int board[8][8]){
     return 0;
 }
 // sprawdzanie czy jakikolwiek czarny pion moze bic
-int can_jump_black_all(int board[8][8]){
+int can_any_black_jump(int board[8][8]){
     for (int i=1;i<9;i++){
         for (int j=1;j<9;j++){
             if (board[i-1][j-1]==2){
@@ -485,21 +487,29 @@ int can_jump_black_all(int board[8][8]){
     }
     return 0;
 }
+
+int char_to_index(char c) {
+    return c - 'a' + 1;
+}
 // ruch bialych
 void white_move(int *pawns, int *kings){
     int a=*pawns;
     int b=*kings;
     printf("ruch bialych\n");
-        if (can_jump_white_all(board)==1){
+        if (can_any_white_jump(board)==1){
             printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-            scanf("%d%d", &x_1, &y_1);
+            scanf(" %c%d", &x_1_char, &x_1);
+            y_1 = char_to_index(x_1_char);
             printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-            scanf("%d%d", &x_2, &y_2);
+            scanf(" %c%d", &x_2_char, &x_2);
+            y_2 = char_to_index(x_2_char);
             while (can_jump_white(board,x_1,y_1,x_2,y_2)==0){
                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-                scanf("%d%d", &x_1, &y_1);
+                scanf(" %c%d", &x_1_char, &x_1);
+                y_1 = char_to_index(x_1_char);
                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-                scanf("%d%d", &x_2, &y_2);
+                scanf(" %c%d", &x_2_char, &x_2);
+                y_2 = char_to_index(x_2_char);
             }
             jump(board,x_1,y_1,x_2,y_2,&black_pawns,&black_kings);
             for (int i=0;i<8;i++){
@@ -516,7 +526,8 @@ void white_move(int *pawns, int *kings){
             y_1=y_2;
             while (can_jump_white(board,x_1,y_1,x_1+2,y_1+2)==1 || can_jump_white(board,x_1,y_1,x_1+2,y_1-2)==1 || can_jump_white(board,x_1,y_1,x_1-2,y_1-2)==1 || can_jump_white(board,x_1,y_1,x_1-2,y_1+2)==1){
                 printf("podaj wspolrzedne pola, na ktore chcesz bic dalej");
-                scanf("%d%d", &x_2, &y_2);
+                scanf(" %c%d", &x_2_char, &x_2);
+                y_2 = char_to_index(x_2_char);
                 if (can_jump_white(board,x_1,y_1,x_2,y_2)==1){
                     jump(board,x_1,y_1,x_2,y_2,&black_pawns,&black_kings);
                     for (int i=0;i<8;i++){
@@ -537,9 +548,11 @@ void white_move(int *pawns, int *kings){
         else{
             while (1){
                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-                scanf("%d%d", &x_1, &y_1);
+                scanf(" %c%d", &x_1_char, &x_1);
+                y_1 = char_to_index(x_1_char);
                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-                scanf("%d%d", &x_2, &y_2);
+                scanf(" %c%d", &x_2_char, &x_2);
+                y_2 = char_to_index(x_2_char);
                 if (can_move_white(board,x_1,y_1,x_2,y_2)==1){
                     move_pawn(board,x_1,y_1,x_2,y_2);
                     for (int i=0;i<8;i++){
@@ -562,16 +575,20 @@ void black_move(int *pawns, int *kings){
     int a=*pawns;
     int b=*kings;
     printf("ruch czarnych\n");
-        if (can_jump_black_all(board)==1){
+        if (can_any_black_jump(board)==1){
             printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-            scanf("%d%d", &x_1, &y_1);
+            scanf(" %c%d", &x_1_char, &x_1);
+            y_1 = char_to_index(x_1_char);
             printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-            scanf("%d%d", &x_2, &y_2);
+            scanf(" %c%d", &x_2_char, &x_2);
+            y_2 = char_to_index(x_2_char);
             while (can_jump_black(board,x_1,y_1,x_2,y_2)==0){
                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-                scanf("%d%d", &x_1, &y_1);
+                scanf(" %c%d", &x_1_char, &x_1);
+                y_1 = char_to_index(x_1_char);
                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-                scanf("%d%d", &x_2, &y_2);
+                scanf(" %c%d", &x_2_char, &x_2);
+                y_2 = char_to_index(x_2_char);
             }
             jump(board,x_1,y_1,x_2,y_2,&white_pawns,&white_kings);
             for (int i=0;i<8;i++){
@@ -588,7 +605,8 @@ void black_move(int *pawns, int *kings){
             y_1=y_2;
             while (can_jump_black(board,x_1,y_1,x_1+2,y_1+2)==1 || can_jump_black(board,x_1,y_1,x_1+2,y_1-2)==1 || can_jump_black(board,x_1,y_1,x_1-2,y_1-2)==1 || can_jump_black(board,x_1,y_1,x_1-2,y_1+2)==1){
                 printf("podaj wspolrzedne pola, na ktore chcesz bic dalej");
-                scanf("%d%d", &x_2, &y_2);
+                scanf(" %c%d", &x_2_char, &x_2);
+                y_2 = char_to_index(x_2_char);
                 if (can_jump_black(board,x_1,y_1,x_2,y_2)==1){
                     jump(board,x_1,y_1,x_2,y_2,&white_pawns,&white_kings);
                     for (int i=0;i<8;i++){
@@ -609,9 +627,11 @@ void black_move(int *pawns, int *kings){
         else{
             while (1){
                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-                scanf("%d%d", &x_1, &y_1);
+                scanf(" %c%d", &x_1_char, &x_1);
+                y_1 = char_to_index(x_1_char);
                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-                scanf("%d%d", &x_2, &y_2);
+                scanf(" %c%d", &x_2_char, &x_2);
+                y_2 = char_to_index(x_2_char);
                 if (can_move_black(board,x_1,y_1,x_2,y_2)==1){
                     move_pawn(board,x_1,y_1,x_2,y_2);
                     for (int i=0;i<8;i++){
@@ -642,6 +662,7 @@ int main(){
         black_move(&black_pawns,&black_kings);
         // show_board(board);
     }
+    game_over = 1;
     printf("Koniec gry!\n");        
     return 0;
 }

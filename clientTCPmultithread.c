@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
-#include<pthread.h>
+#include <pthread.h>
 
 int main(){
 
@@ -27,7 +27,7 @@ int main(){
   serverAddr.sin_port = htons(1100);
 
  //Set IP address
-  serverAddr.sin_addr.s_addr = inet_addr(TODO);
+  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
     //Connect the socket to the server using the address
