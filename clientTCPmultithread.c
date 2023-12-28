@@ -56,7 +56,7 @@ int main(){
   serverAddr.sin_family = AF_INET;
 
   //Set port number, using htons function 
-  serverAddr.sin_port = htons(1100);
+  serverAddr.sin_port = htons(1101);
 
  //Set IP address
   serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
