@@ -42,7 +42,7 @@ void show_board(int board[8][8]){
 
 int main(){
 
-  char message[1000];
+  char message[1024];
   char buffer[1024];
   int clientSocket;
   struct sockaddr_in serverAddr;
@@ -69,36 +69,35 @@ int main(){
     int msg_scanf_size;
 
 
-    recv(clientSocket, board, sizeof(board), 0);
-    show_board(board);
-
     for(;;){
-        
 
-        // msg_scanf_size = scanf("%s", message);
-        char *s;
-        s = strstr(message, "exit");
-        if (s != NULL)
-        {
-            printf("Exiting\n");
-            break;
+        recv(clientSocket, buffer, 1024, 0);
 
-            }
+        if(strcmp(buffer,"insert coordinates")==0){
+            printf("Insert coordinates in format like c3-e4\n");
+            scanf("%s", message);
+            send(clientSocket, message, sizeof(message), 0);
+        }
+        else if(strcmp(buffer,"sending board")==0){
+            printf("The board: \n");
+            recv(clientSocket, board, sizeof(board), 0);
+            show_board(board);
+            memset(&board, 0, sizeof(board));
+        }
+        else if(strcmp(buffer,"read information")==0){
+            printf("information from server: ");
+            memset(&buffer, sizeof(buffer), 0);
+            recv(clientSocket, buffer, sizeof(buffer), 0);
+            printf("%s\n", buffer);
+        }
+        else if(strcmp(buffer,"insert jump")==0){
+            printf("insert coordinates of a place where you want to jump next in format like e5\n");
+            scanf("%s", message);
+            send(clientSocket, message, sizeof(message), 0);
+        }
 
-            if( send(clientSocket , message , strlen(message) , 0) < 0)
-            {
-                    printf("Send failed\n");
-            }
-
-            //Read the message from the server into the buffer
-            if(recv(clientSocket, buffer, 1024, 0) < 0)
-            {
-                printf("Receive failed\n");
-            }
-            //Print the received message
-            printf("Data received: %s\n",buffer);
-
-            memset(&message, 0, sizeof (message));
+        memset(&buffer, 0, sizeof(buffer));
+        memset(&message, 0, sizeof (message));
     }
 
     close(clientSocket);

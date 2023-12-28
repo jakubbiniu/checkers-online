@@ -8,7 +8,7 @@
 #include <unistd.h> // for close
 #include<pthread.h>
 
-char client_message[2000];
+char client_message[1024];
 char buffer[1024];
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -83,6 +83,7 @@ int all_black_kings[5]={0,0,0,0,0};
 // char x_1_char, x_2_char;
 
 int games[5] = {0, 0, 0, 0, 0};
+int to_move[5] = {0, 0, 0, 0, 0};
 
 // funkcja przesuwająca pionki
 void move_pawn(int board[8][8], int x1, int y1, int x2, int y2){
@@ -534,195 +535,6 @@ int char_to_index(char c) {
     return c - 'a' + 1;
 }
 
-// // ruch bialych
-// void white_move(int board[8][8], int *pawns, int *kings){
-//     int a=*pawns;
-//     int b=*kings;
-//     printf("ruch bialych\n");
-//         if (can_any_white_jump(board)==1){
-//             printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-//             scanf(" %c%d", &x_1_char, &x_1);
-//             y_1 = char_to_index(x_1_char);
-//             printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-//             scanf(" %c%d", &x_2_char, &x_2);
-//             y_2 = char_to_index(x_2_char);
-//             while (can_jump_white(board,x_1,y_1,x_2,y_2)==0){
-//                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-//                 scanf(" %c%d", &x_1_char, &x_1);
-//                 y_1 = char_to_index(x_1_char);
-//                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-//                 scanf(" %c%d", &x_2_char, &x_2);
-//                 y_2 = char_to_index(x_2_char);
-//             }
-//             jump(board,x_1,y_1,x_2,y_2,&black_pawns,&black_kings);
-//             for (int i=0;i<8;i++){
-//                 if (board[7][i]==1){
-//                     board[7][i]=3;
-//                     a--;
-//                     b++;
-//                     *pawns=a;
-//                     *kings=b;
-//                 }
-//             }
-//             show_board(board);
-//             x_1=x_2;
-//             y_1=y_2;
-//             while (can_jump_white(board,x_1,y_1,x_1+2,y_1+2)==1 || can_jump_white(board,x_1,y_1,x_1+2,y_1-2)==1 || can_jump_white(board,x_1,y_1,x_1-2,y_1-2)==1 || can_jump_white(board,x_1,y_1,x_1-2,y_1+2)==1){
-//                 printf("podaj wspolrzedne pola, na ktore chcesz bic dalej");
-//                 scanf(" %c%d", &x_2_char, &x_2);
-//                 y_2 = char_to_index(x_2_char);
-//                 if (can_jump_white(board,x_1,y_1,x_2,y_2)==1){
-//                     jump(board,x_1,y_1,x_2,y_2,&black_pawns,&black_kings);
-//                     for (int i=0;i<8;i++){
-//                         if (board[7][i]==1){
-//                             board[7][i]=3;
-//                             a--;
-//                             b++;
-//                             *pawns=a;
-//                             *kings=b;
-//                         }
-//                     }
-//                     show_board(board);
-//                     x_1=x_2;
-//                     y_1=y_2;
-//                 }
-//                 }
-//         }
-//         else{
-//             while (1){
-//                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-//                 scanf(" %c%d", &x_1_char, &x_1);
-//                 y_1 = char_to_index(x_1_char);
-//                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-//                 scanf(" %c%d", &x_2_char, &x_2);
-//                 y_2 = char_to_index(x_2_char);
-//                 if (can_move_white(board,x_1,y_1,x_2,y_2)==1){
-//                     move_pawn(board,x_1,y_1,x_2,y_2);
-//                     for (int i=0;i<8;i++){
-//                         if (board[7][i]==1){
-//                             board[7][i]=3;
-//                             a--;
-//                             b++;
-//                             *pawns=a;
-//                             *kings=b;
-//                         }
-//                     }
-//                     show_board(board);
-//                     break;
-//                 }
-//             }
-//         }
-// }
-// // ruch czarnych
-// void black_move(int board[8][8],int *pawns, int *kings){
-//     int a=*pawns;
-//     int b=*kings;
-//     printf("ruch czarnych\n");
-//         if (can_any_black_jump(board)==1){
-//             printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-//             scanf(" %c%d", &x_1_char, &x_1);
-//             y_1 = char_to_index(x_1_char);
-//             printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-//             scanf(" %c%d", &x_2_char, &x_2);
-//             y_2 = char_to_index(x_2_char);
-//             while (can_jump_black(board,x_1,y_1,x_2,y_2)==0){
-//                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-//                 scanf(" %c%d", &x_1_char, &x_1);
-//                 y_1 = char_to_index(x_1_char);
-//                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-//                 scanf(" %c%d", &x_2_char, &x_2);
-//                 y_2 = char_to_index(x_2_char);
-//             }
-//             jump(board,x_1,y_1,x_2,y_2,&white_pawns,&white_kings);
-//             for (int i=0;i<8;i++){
-//                 if (board[0][i]==2){
-//                     board[0][i]=4;
-//                     a--;
-//                     b++;
-//                     *pawns=a;
-//                     *kings=b;
-//                 }
-//             }
-//             show_board(board);
-//             x_1=x_2;
-//             y_1=y_2;
-//             while (can_jump_black(board,x_1,y_1,x_1+2,y_1+2)==1 || can_jump_black(board,x_1,y_1,x_1+2,y_1-2)==1 || can_jump_black(board,x_1,y_1,x_1-2,y_1-2)==1 || can_jump_black(board,x_1,y_1,x_1-2,y_1+2)==1){
-//                 printf("podaj wspolrzedne pola, na ktore chcesz bic dalej");
-//                 scanf(" %c%d", &x_2_char, &x_2);
-//                 y_2 = char_to_index(x_2_char);
-//                 if (can_jump_black(board,x_1,y_1,x_2,y_2)==1){
-//                     jump(board,x_1,y_1,x_2,y_2,&white_pawns,&white_kings);
-//                     for (int i=0;i<8;i++){
-//                         if (board[0][i]==2){
-//                             board[0][i]=4;
-//                             a--;
-//                             b++;
-//                             *pawns=a;
-//                             *kings=b;
-//                         }
-//                     }
-//                     show_board(board);
-//                     x_1=x_2;
-//                     y_1=y_2;
-//                 }
-//                 }
-//         }
-//         else{
-//             while (1){
-//                 printf("Podaj wspolrzedne piona ktorego chcesz przesunac: ");
-//                 scanf(" %c%d", &x_1_char, &x_1);
-//                 y_1 = char_to_index(x_1_char);
-//                 printf("Podaj wspolrzedne pola na ktore chcesz go przesunac "); 
-//                 scanf(" %c%d", &x_2_char, &x_2);
-//                 y_2 = char_to_index(x_2_char);
-//                 if (can_move_black(board,x_1,y_1,x_2,y_2)==1){
-//                     move_pawn(board,x_1,y_1,x_2,y_2);
-//                     for (int i=0;i<8;i++){
-//                         if (board[0][i]==2){
-//                             board[0][i]=4;
-//                             a--;
-//                             b++;
-//                             *pawns=a;
-//                             *kings=b;
-//                         }
-//                     }
-//                     show_board(board);
-//                     break;
-//                 }
-//             }
-//         }
-// }
-
-void show_board(int board[8][8]){
-    for (int i=7;i>=0;i--){
-        printf("  ---------------------------------\n");
-        printf("%d |", i+1);
-        for (int j=0;j<8;j++){
-            if (board[i][j]==-1){
-                printf("   |");
-            }
-            else if (board[i][j]==0){
-                printf(" . |");
-            }
-            else if (board[i][j]==1){
-                printf(" b |");
-            }
-            else if (board[i][j]==2){
-                printf(" c |");
-            }
-            else if (board[i][j]==3){
-                printf(" B |");
-            }
-            else if (board[i][j]==4){
-                printf(" C |");
-            }
-        }
-        printf("\n");
-    }
-    printf("  ---------------------------------\n");
-    printf("    a   b   c   d   e   f   g   h\n");
-}
-
 void * socketThread(void *arg){
     printf("new thread \n");
     int newSocket = *((int *)arg);
@@ -748,37 +560,192 @@ void * socketThread(void *arg){
         }
     }
 
-    send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
-
     if(game_found==0){
-        send(newSocket, "servers are busy", sizeof("Servers are busy"), 0);
+        strcpy(buffer, "read information");
+        send(newSocket, buffer, sizeof(buffer), 0);
+        memset(&buffer, 0, sizeof(buffer));
+        strcpy(buffer, "servers are busy");
+        send(newSocket, buffer, sizeof(buffer), 0);
+        memset(&buffer, 0, sizeof(buffer));
     }
     else{
-        send(newSocket, "connected to a game", sizeof("connected to a game"), 0);
+        strcpy(buffer, "read information");
+        send(newSocket, buffer, sizeof(buffer), 0);
+        memset(&buffer, 0, sizeof(buffer));
+        strcpy(buffer, "connected to a game");
+        send(newSocket, buffer, sizeof(buffer), 0);
+        memset(&buffer, 0, sizeof(buffer));
     }
 
-    sleep(1);
-    send(newSocket, color, sizeof(color), 0);
-    sleep(1);
+    strcpy(buffer, "read information");
+    send(newSocket, buffer, sizeof(buffer), 0);
+    memset(&buffer, 0, sizeof(buffer));
+    strcpy(buffer, color);
+    send(newSocket, buffer, sizeof(buffer), 0);
+    memset(&buffer, 0, sizeof(buffer));
     char game_num_string[128];
     sprintf(game_num_string, "%d", game_num);
-    send(newSocket, game_num_string, sizeof(game_num_string), 0);
+    strcpy(buffer, "read information");
+    send(newSocket, buffer, sizeof(buffer), 0);
+    memset(&buffer, 0, sizeof(buffer));
+    strcpy(buffer, game_num_string);
+    send(newSocket, buffer, sizeof(buffer), 0);
+    memset(&buffer, 0, sizeof(buffer));
 
     for (;;){
-        n = recv(newSocket, client_message, 2000, 0);
-        printf("%d: %s\n", newSocket, client_message);
-        if (n < 1)
-        {
-            break;
+        if (to_move[game_num] == 0 && strcmp(color,"white")==0 && (all_white_pawns[game_num]+all_white_kings[game_num])>0 && (all_black_pawns[game_num]+all_black_kings[game_num])>0){
+            send(newSocket, "sending board", 1024, 0);
+            send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+            if(can_any_white_jump(boards[game_num])==1){
+                send(newSocket, "insert coordinates", 1024, 0);
+                recv(newSocket, client_message, sizeof(client_message),0);
+                sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
+                y_1 = char_to_index(x_1_char);
+                y_2 = char_to_index(x_2_char);
+                while (can_jump_white(board,x_1,y_1,x_2,y_2)==0){
+                    send(newSocket, "read information", 1024, 0);
+                    send(newSocket, "wrong coordinates", 1024, 0);
+                    send(newSocket, "insert coordinates", 1024, 0);
+                    recv(newSocket, client_message, sizeof(client_message),0);
+                    sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
+                    y_1 = char_to_index(x_1_char);
+                    y_2 = char_to_index(x_2_char);
+                }
+                jump(boards[game_num],x_1,y_1,x_2,y_2,&all_black_pawns[game_num],&all_black_kings[game_num]);
+                for (int i=0;i<8;i++){
+                    if (boards[game_num][7][i]==1){
+                        boards[game_num][7][i]=3;
+                        all_white_pawns[game_num]--;
+                        all_white_kings[game_num]++;
+                    }
+                }
+                send(newSocket, "sending board", 1024, 0);
+                send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+                x_1 = x_2;
+                y_1 = y_2;
+                while (can_jump_white(boards[game_num],x_1,y_1,x_1+2,y_1+2)==1 || can_jump_white(boards[game_num],x_1,y_1,x_1+2,y_1-2)==1 || can_jump_white(boards[game_num],x_1,y_1,x_1-2,y_1-2)==1 || can_jump_white(boards[game_num],x_1,y_1,x_1-2,y_1+2)==1){
+                    send(newSocket, "insert jump", 1024, 0);
+                    recv(newSocket, client_message, sizeof(client_message),0);
+                    sscanf(client_message, "%c%d",&x_2_char,&x_2);
+                    y_2 = char_to_index(x_2_char);
+                    if (can_jump_white(boards[game_num], x_1, y_1, x_2, y_2) == 1){
+                        jump(boards[game_num], x_1, y_1, x_2, y_2, &all_black_pawns[game_num], &all_black_kings[game_num]);
+                        for (int i = 0; i < 8; i++){
+                            if (boards[game_num][7][i] == 1){
+                                boards[game_num][7][i] = 3;
+                                all_white_pawns[game_num]--;
+                                all_white_kings[game_num]++;
+                            }
+                        }
+                        send(newSocket, "sending board", 1024, 0);
+                        send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+                        x_1 = x_2;
+                        y_1 = y_2;
+                    }
+                }
+                to_move[game_num] = 1;
+            }
+            else{
+                while (1){
+                    send(newSocket, "insert coordinates", 1024, 0);
+                    recv(newSocket, client_message, sizeof(client_message),0);
+                    sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
+                    y_1 = char_to_index(x_1_char);
+                    y_2 = char_to_index(x_2_char);
+                    if (can_move_white(boards[game_num],x_1,y_1,x_2,y_2)==1){
+                        move_pawn(boards[game_num],x_1,y_1,x_2,y_2);
+                        for (int i=0;i<8;i++){
+                            if (boards[game_num][7][i]==1){
+                                boards[game_num][7][i]=3;
+                                all_white_kings[game_num]++;
+                                all_white_pawns[game_num]--;
+                            }
+                        }
+                        send(newSocket, "sending board", 1024, 0);
+                        send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+                        to_move[game_num] = 1;
+                        break;
+                    }
+                }
+            }
         }
 
-        char *message = malloc(sizeof(client_message));
-        strcpy(message, client_message);
-
-        sleep(1);
-        send(newSocket, message, sizeof(message), 0);
-        memset(&client_message, 0, sizeof(client_message));
-
+        else if(to_move[game_num] == 1 && strcmp(color,"black")==0 && (all_white_pawns[game_num]+all_white_kings[game_num])>0 && (all_black_pawns[game_num]+all_black_kings[game_num])>0){
+            send(newSocket, "sending board", 1024, 0);
+            send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+            if(can_any_black_jump(boards[game_num])==1){
+                send(newSocket, "insert coordinates", 1024, 0);
+                recv(newSocket, client_message, sizeof(client_message),0);
+                sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
+                y_1 = char_to_index(x_1_char);
+                y_2 = char_to_index(x_2_char);
+                while (can_jump_black(boards[game_num],x_1,y_1,x_2,y_2)==0){
+                    send(newSocket, "read information", 1024, 0);
+                    send(newSocket, "wrong coordinates", 1024, 0);
+                    send(newSocket, "insert coordinates", 1024, 0);
+                    recv(newSocket, client_message, sizeof(client_message),0);
+                    sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
+                    y_1 = char_to_index(x_1_char);
+                    y_2 = char_to_index(x_2_char);
+                }
+                jump(boards[game_num],x_1,y_1,x_2,y_2,&all_white_pawns[game_num],&all_white_kings[game_num]);
+                for (int i=0;i<8;i++){
+                    if (boards[game_num][0][i]==2){
+                        boards[game_num][0][i]=4;
+                        all_black_pawns[game_num]--;
+                        all_black_kings[game_num]++;
+                    }
+                }
+                send(newSocket, "sending board", 1024, 0);
+                send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+                x_1 = x_2;
+                y_1 = y_2;
+                while (can_jump_black(boards[game_num],x_1,y_1,x_1+2,y_1+2)==1 || can_jump_black(boards[game_num],x_1,y_1,x_1+2,y_1-2)==1 || can_jump_black(boards[game_num],x_1,y_1,x_1-2,y_1-2)==1 || can_jump_black(boards[game_num],x_1,y_1,x_1-2,y_1+2)==1){
+                    send(newSocket, "insert jump", 1024, 0);
+                    recv(newSocket, client_message, sizeof(client_message),0);
+                    sscanf(client_message, "%c%d",&x_2_char,&x_2);
+                    y_2 = char_to_index(x_2_char);
+                    if (can_jump_black(boards[game_num], x_1, y_1, x_2, y_2) == 1){
+                        jump(boards[game_num], x_1, y_1, x_2, y_2, &all_white_pawns[game_num], &all_white_kings[game_num]);
+                        for (int i = 0; i < 8; i++){
+                            if (boards[game_num][0][i] == 1){
+                                boards[game_num][0][i] = 3;
+                                all_black_pawns[game_num]--;
+                                all_black_kings[game_num]++;
+                            }
+                        }
+                        send(newSocket, "sending board", 1024, 0);
+                        send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+                        x_1 = x_2;
+                        y_1 = y_2;
+                    }
+                }
+                to_move[game_num] = 0;
+            }
+            else{
+                while (1){
+                    send(newSocket, "insert coordinates", 1024, 0);
+                    recv(newSocket, client_message, sizeof(client_message),0);
+                    sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
+                    y_1 = char_to_index(x_1_char);
+                    y_2 = char_to_index(x_2_char);
+                    if (can_move_black(boards[game_num],x_1,y_1,x_2,y_2)==1){
+                        move_pawn(boards[game_num],x_1,y_1,x_2,y_2);
+                        for (int i=0;i<8;i++){
+                            if (boards[game_num][0][i]==1){
+                                boards[game_num][0][i]=3;
+                                all_black_kings[game_num]++;
+                                all_black_pawns[game_num]--;
+                            }
+                        }
+                        send(newSocket, "sending board", 1024, 0);
+                        send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+                        to_move[game_num] = 0;
+                        break;
+                    }
+                }
+            }
+        }
     }
         printf("Exit socketThread %d\n",newSocket);
         pthread_exit(NULL);
