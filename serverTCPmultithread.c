@@ -13,7 +13,7 @@ char client_message[1024];
 char buffer[1024];
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-int max_num_games = 5;
+int max_num_games = 2;
 int to_stop;
 
 int board[8][8] = {{1,-1,1,-1,1,-1,1,-1},{-1,1,-1,1,-1,1,-1,1},{1,-1,1,-1,1,-1,1,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,2,-1,2,-1,2,-1,2},{2,-1,2,-1,2,-1,2,-1},{-1,2,-1,2,-1,2,-1,2}};
@@ -534,7 +534,7 @@ void * socketThread(void *arg){
     int x_1, x_2, y_1, y_2;
     char x_1_char, x_2_char;
 
-    for (int i = 0; i < 5;i++){
+    for (int i = 0; i < max_num_games;i++){
         if(games[i]<2){
         game_num = i;
         game_found = 1;
@@ -556,6 +556,8 @@ void * socketThread(void *arg){
         strcpy(buffer, "servers are busy");
         send(newSocket, buffer, sizeof(buffer), 0);
         memset(&buffer, 0, sizeof(buffer));
+        printf("Exit socketThread %d\n",newSocket);
+        send(newSocket, "exit", 1024, 0);
         close(newSocket);
         pthread_exit(NULL);
     }
@@ -728,7 +730,6 @@ void * socketThread(void *arg){
         }
 
         else if(to_move[game_num] == 1 && strcmp(color,"black")==0 && (all_white_pawns[game_num]+all_white_kings[game_num])>0 && (all_black_pawns[game_num]+all_black_kings[game_num])>0){
-            printf("%d %d\n", all_black_kings[game_num], all_black_pawns[game_num]);
             send(newSocket, "sending board", 1024, 0);
             send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
             if(can_any_black_jump(boards[game_num])==1){
