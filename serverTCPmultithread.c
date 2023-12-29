@@ -14,6 +14,7 @@ char buffer[1024];
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 int max_num_games = 5;
+int to_stop;
 
 int board[8][8] = {{1,-1,1,-1,1,-1,1,-1},{-1,1,-1,1,-1,1,-1,1},{1,-1,1,-1,1,-1,1,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,2,-1,2,-1,2,-1,2},{2,-1,2,-1,2,-1,2,-1},{-1,2,-1,2,-1,2,-1,2}};
 
@@ -517,6 +518,12 @@ int char_to_index(char c) {
     return c - 'a' + 1;
 }
 
+void sigpipe_handler(int signo) {
+    printf("Otrzymano sygnał SIGPIPE. Klient się odłączył.\n");
+    // exit(EXIT_SUCCESS);
+}
+
+
 void * socketThread(void *arg){
     int newSocket = *((int *)arg);
     printf("new thread %d\n",newSocket);
@@ -601,11 +608,32 @@ void * socketThread(void *arg){
                 send(newSocket, "insert coordinates", 1024, 0);
                 n = recv(newSocket, client_message, sizeof(client_message),0);
                 if(n<=0){
-                    game_status[game_num] = 3;
-                    printf("Client disconnected: %d\n", newSocket);
-                    close(newSocket);
-                    pthread_exit(NULL);
-                    break;
+                    if(game_status[game_num]!=3){
+                        game_status[game_num] = 3;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }
+                    else{
+                        send(newSocket, "disconnect", 1024, 0);
+                        game_status[game_num] = 0;
+                        games[game_num] = 0;
+                        all_black_kings[game_num] = 0;
+                        all_black_pawns[game_num] = 12;
+                        all_white_kings[game_num] = 0;
+                        all_white_pawns[game_num] = 12;
+                        for (int i = 0; i<8;i++){
+                            for (int j = 0; j < 8;j++){
+                                boards[game_num][i][j] = board[i][j];
+                            }
+                        }
+                        to_move[game_num] = 0;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }
                 }
                 sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                 y_1 = char_to_index(x_1_char);
@@ -863,6 +891,8 @@ void * socketThread(void *arg){
 
 
 int main(){
+
+    signal(SIGPIPE, sigpipe_handler);
   int serverSocket, newSocket;
   struct sockaddr_in serverAddr;
   struct sockaddr_storage serverStorage;
