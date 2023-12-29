@@ -22,7 +22,7 @@ int boards[5][8][8] = {
         {-1,0,-1,0,-1,0,-1,0},
         {0,-1,0,-1,1,-1,0,-1},
         {-1,0,-1,0,-1,0,-1,0},
-        {0,-1,0,-1,0,-1,0,-1},
+        {0,-1,0,-1,2,-1,0,-1},
         {-1,0,-1,0,-1,2,-1,0},
         {0,-1,0,-1,0,-1,0,-1},
         {-1,0,-1,0,-1,0,-1,0}
@@ -753,13 +753,36 @@ void * socketThread(void *arg){
             all_black_pawns[game_num] = 12;
             all_white_kings[game_num] = 0;
             all_white_pawns[game_num] = 12;
-            printf("siema 1\n");
             for (int i = 0; i<8;i++){
                 for (int j = 0; j < 8;j++){
                     boards[game_num][i][j] = board[i][j];
                 }
             }
-            printf("siema 2\n");
+            to_move[game_num] = 0;
+            games[game_num] = 0;
+            game_status[game_num] = 0;
+            break;
+        }
+        else if(to_move[game_num]==0 && strcmp(color,"white")==0 && (all_white_kings[game_num]+all_white_pawns[game_num])==0){
+            send(newSocket, "sending board", 1024, 0);
+            send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+            send(newSocket, "read information", 1024, 0);
+            send(newSocket, "black player won", 1024, 0);
+            game_status[game_num] = 2;
+            break;
+        }
+        else if(to_move[game_num]==0 && strcmp(color,"black")==0 && game_status[game_num]==2 && (all_white_kings[game_num]+all_white_pawns[game_num])==0){
+            send(newSocket, "read information", 1024, 0);
+            send(newSocket, "black player won", 1024, 0);
+            all_black_kings[game_num] = 0;
+            all_black_pawns[game_num] = 12;
+            all_white_kings[game_num] = 0;
+            all_white_pawns[game_num] = 12;
+            for (int i = 0; i<8;i++){
+                for (int j = 0; j < 8;j++){
+                    boards[game_num][i][j] = board[i][j];
+                }
+            }
             to_move[game_num] = 0;
             games[game_num] = 0;
             game_status[game_num] = 0;
