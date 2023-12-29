@@ -56,7 +56,7 @@ int main(){
   serverAddr.sin_family = AF_INET;
 
   //Set port number, using htons function 
-  serverAddr.sin_port = htons(1101);
+  serverAddr.sin_port = htons(1100);
 
  //Set IP address
   serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -94,6 +94,9 @@ int main(){
             printf("insert coordinates of a place where you want to jump next in format like e5\n");
             scanf("%s", message);
             send(clientSocket, message, sizeof(message), 0);
+        }
+        else if(strcmp(buffer,"exit")==0){
+            break;
         }
 
         memset(&buffer, 0, sizeof(buffer));

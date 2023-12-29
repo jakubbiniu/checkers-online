@@ -14,18 +14,18 @@ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 int max_num_games = 5;
 
-int board = {{1,-1,1,-1,1,-1,1,-1},{-1,1,-1,1,-1,1,-1,1},{1,-1,1,-1,1,-1,1,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,2,-1,2,-1,2,-1,2},{2,-1,2,-1,2,-1,2,-1},{-1,2,-1,2,-1,2,-1,2}};
+int board[8][8] = {{1,-1,1,-1,1,-1,1,-1},{-1,1,-1,1,-1,1,-1,1},{1,-1,1,-1,1,-1,1,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,2,-1,2,-1,2,-1,2},{2,-1,2,-1,2,-1,2,-1},{-1,2,-1,2,-1,2,-1,2}};
 
 int boards[5][8][8] = {
     {
-        {1,-1,1,-1,1,-1,1,-1},
-        {-1,1,-1,1,-1,1,-1,1},
-        {1,-1,1,-1,1,-1,1,-1},
+        {0,-1,0,-1,0,-1,0,-1},
+        {-1,0,-1,0,-1,0,-1,0},
+        {0,-1,0,-1,1,-1,0,-1},
         {-1,0,-1,0,-1,0,-1,0},
         {0,-1,0,-1,0,-1,0,-1},
-        {-1,2,-1,2,-1,2,-1,2},
-        {2,-1,2,-1,2,-1,2,-1},
-        {-1,2,-1,2,-1,2,-1,2}
+        {-1,0,-1,0,-1,2,-1,0},
+        {0,-1,0,-1,0,-1,0,-1},
+        {-1,0,-1,0,-1,0,-1,0}
     },
     {
         {1,-1,1,-1,1,-1,1,-1},
@@ -69,8 +69,8 @@ int boards[5][8][8] = {
     }
 };
 
-int all_white_pawns[5]={12,12,12,12,12};
-int all_black_pawns[5]={12,12,12,12,12};
+int all_white_pawns[5]={1,12,12,12,12};
+int all_black_pawns[5]={1,12,12,12,12};
 int all_white_kings[5]={0,0,0,0,0};
 int all_black_kings[5]={0,0,0,0,0};
 
@@ -84,6 +84,7 @@ int all_black_kings[5]={0,0,0,0,0};
 
 int games[5] = {0, 0, 0, 0, 0};
 int to_move[5] = {0, 0, 0, 0, 0};
+int game_status[5] = {0, 0, 0, 0, 0}; //1 - white won, 2- black won, 0 - currently no winner
 
 // funkcja przesuwająca pionki
 void move_pawn(int board[8][8], int x1, int y1, int x2, int y2){
@@ -211,7 +212,7 @@ int can_move_black(int board[8][8], int x1, int y1, int x2, int y2){
     return 0;
 }
 // bicie
-void jump(int board[8][8], int x1, int y1, int x2, int y2, int pawns, int kings){
+void jump(int board[8][8], int x1, int y1, int x2, int y2, int *pawns, int *kings){
     x1--;
     x2--;
     y1--;
@@ -221,10 +222,10 @@ void jump(int board[8][8], int x1, int y1, int x2, int y2, int pawns, int kings)
         int x3=(x1+x2)/2;
         int y3=(y1+y2)/2;
         if (board[x3][y3]==1 || board[x3][y3]==2){
-            pawns--;
+            (*pawns)--;
         }
         else{
-            kings--;
+            (*kings)--;
         }
         board[x3][y3]=0;
         board[x2][y2]=p;
@@ -236,10 +237,10 @@ void jump(int board[8][8], int x1, int y1, int x2, int y2, int pawns, int kings)
                 int j=y1+abs(i-x1);
                 if (board[i][j]!=0){
                     if (board[i][j]==1 || board[i][j]==2){
-                        pawns--;
+                        (*pawns)--;
                     }
                     else{
-                        kings--;
+                        (*kings)--;
                     }
                     board[i][j]=0;
                     board[x2][y2]=p;
@@ -253,10 +254,10 @@ void jump(int board[8][8], int x1, int y1, int x2, int y2, int pawns, int kings)
                 int j=y1-abs(i-x1);
                 if (board[i][j]!=0){
                     if (board[i][j]==1 || board[i][j]==2){
-                        pawns--;
+                        (*pawns)--;
                     }
                     else{
-                        kings--;
+                        (*kings)--;
                     }
                     board[i][j]=0;
                     board[x2][y2]=p;
@@ -270,10 +271,10 @@ void jump(int board[8][8], int x1, int y1, int x2, int y2, int pawns, int kings)
                 int j=y1+abs(x1-i);
                 if (board[i][j]!=0){
                     if (board[i][j]==1 || board[i][j]==2){
-                        pawns--;
+                        (*pawns)--;
                     }
                     else{
-                        kings--;
+                        (*kings)--;
                     }
                     board[i][j]=0;
                     board[x2][y2]=p;
@@ -287,10 +288,10 @@ void jump(int board[8][8], int x1, int y1, int x2, int y2, int pawns, int kings)
                 int j=y1-abs(x1-i);
                 if (board[i][j]!=0){
                     if (board[i][j]==1 || board[i][j]==2){
-                        pawns--;
+                        (*pawns)--;
                     }
                     else{
-                        kings--;
+                        (*kings)--;
                     }
                     board[i][j]=0;
                     board[x2][y2]=p;
@@ -524,8 +525,8 @@ int char_to_index(char c) {
 }
 
 void * socketThread(void *arg){
-    printf("new thread \n");
     int newSocket = *((int *)arg);
+    printf("new thread %d\n",newSocket);
     int n;
     int game_found = 0;
     char color[128];
@@ -587,9 +588,7 @@ void * socketThread(void *arg){
             memset(&buffer, 0, sizeof(buffer));
             send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
             if(can_any_white_jump(boards[game_num])==1){
-                printf("siemaaa 0\n");
                 send(newSocket, "insert coordinates", 1024, 0);
-                printf("siemaaa 1\n");
                 recv(newSocket, client_message, sizeof(client_message),0);
                 sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                 y_1 = char_to_index(x_1_char);
@@ -603,8 +602,7 @@ void * socketThread(void *arg){
                     y_1 = char_to_index(x_1_char);
                     y_2 = char_to_index(x_2_char);
                 }
-                printf("siemaaa 2\n");
-                jump(boards[game_num],x_1,y_1,x_2,y_2,all_black_pawns[game_num],all_black_kings[game_num]);
+                jump(boards[game_num],x_1,y_1,x_2,y_2,&all_black_pawns[game_num],&all_black_kings[game_num]);
                 for (int i=0;i<8;i++){
                     if (boards[game_num][7][i]==1){
                         boards[game_num][7][i]=3;
@@ -622,7 +620,7 @@ void * socketThread(void *arg){
                     sscanf(client_message, "%c%d",&x_2_char,&x_2);
                     y_2 = char_to_index(x_2_char);
                     if (can_jump_white(boards[game_num], x_1, y_1, x_2, y_2) == 1){
-                        jump(boards[game_num], x_1, y_1, x_2, y_2, all_black_pawns[game_num], all_black_kings[game_num]);
+                        jump(boards[game_num], x_1, y_1, x_2, y_2, &all_black_pawns[game_num], &all_black_kings[game_num]);
                         for (int i = 0; i < 8; i++){
                             if (boards[game_num][7][i] == 1){
                                 boards[game_num][7][i] = 3;
@@ -664,6 +662,7 @@ void * socketThread(void *arg){
         }
 
         else if(to_move[game_num] == 1 && strcmp(color,"black")==0 && (all_white_pawns[game_num]+all_white_kings[game_num])>0 && (all_black_pawns[game_num]+all_black_kings[game_num])>0){
+            printf("%d %d\n", all_black_kings[game_num], all_black_pawns[game_num]);
             send(newSocket, "sending board", 1024, 0);
             send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
             if(can_any_black_jump(boards[game_num])==1){
@@ -681,7 +680,7 @@ void * socketThread(void *arg){
                     y_1 = char_to_index(x_1_char);
                     y_2 = char_to_index(x_2_char);
                 }
-                jump(boards[game_num],x_1,y_1,x_2,y_2,all_white_pawns[game_num],all_white_kings[game_num]);
+                jump(boards[game_num],x_1,y_1,x_2,y_2,&all_white_pawns[game_num],&all_white_kings[game_num]);
                 for (int i=0;i<8;i++){
                     if (boards[game_num][0][i]==2){
                         boards[game_num][0][i]=4;
@@ -699,10 +698,10 @@ void * socketThread(void *arg){
                     sscanf(client_message, "%c%d",&x_2_char,&x_2);
                     y_2 = char_to_index(x_2_char);
                     if (can_jump_black(boards[game_num], x_1, y_1, x_2, y_2) == 1){
-                        jump(boards[game_num], x_1, y_1, x_2, y_2, all_white_pawns[game_num], all_white_kings[game_num]);
+                        jump(boards[game_num], x_1, y_1, x_2, y_2, &all_white_pawns[game_num], &all_white_kings[game_num]);
                         for (int i = 0; i < 8; i++){
-                            if (boards[game_num][0][i] == 1){
-                                boards[game_num][0][i] = 3;
+                            if (boards[game_num][0][i] == 2){
+                                boards[game_num][0][i] = 4;
                                 all_black_pawns[game_num]--;
                                 all_black_kings[game_num]++;
                             }
@@ -725,8 +724,8 @@ void * socketThread(void *arg){
                     if (can_move_black(boards[game_num],x_1,y_1,x_2,y_2)==1){
                         move_pawn(boards[game_num],x_1,y_1,x_2,y_2);
                         for (int i=0;i<8;i++){
-                            if (boards[game_num][0][i]==1){
-                                boards[game_num][0][i]=3;
+                            if (boards[game_num][0][i]==2){
+                                boards[game_num][0][i]=4;
                                 all_black_kings[game_num]++;
                                 all_black_pawns[game_num]--;
                             }
@@ -739,8 +738,36 @@ void * socketThread(void *arg){
                 }
             }
         }
+        else if(to_move[game_num]==1 && strcmp(color,"black")==0 && (all_black_kings[game_num]+all_black_pawns[game_num])==0){
+            send(newSocket, "sending board", 1024, 0);
+            send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
+            send(newSocket, "read information", 1024, 0);
+            send(newSocket, "white player won", 1024, 0);
+            game_status[game_num] = 1;
+            break;
+        }
+        else if(to_move[game_num]==1 && strcmp(color,"white")==0 && game_status[game_num]==1 && (all_black_kings[game_num]+all_black_pawns[game_num])==0){
+            send(newSocket, "read information", 1024, 0);
+            send(newSocket, "white player won", 1024, 0);
+            all_black_kings[game_num] = 0;
+            all_black_pawns[game_num] = 12;
+            all_white_kings[game_num] = 0;
+            all_white_pawns[game_num] = 12;
+            printf("siema 1\n");
+            for (int i = 0; i<8;i++){
+                for (int j = 0; j < 8;j++){
+                    boards[game_num][i][j] = board[i][j];
+                }
+            }
+            printf("siema 2\n");
+            to_move[game_num] = 0;
+            games[game_num] = 0;
+            game_status[game_num] = 0;
+            break;
+        }
     }
         printf("Exit socketThread %d\n",newSocket);
+        send(newSocket, "exit", 1024, 0);
         pthread_exit(NULL);
 }
 
@@ -758,7 +785,7 @@ int main(){
   serverAddr.sin_family = AF_INET;
 
   //Set port number, using htons function to use proper byte order 
-  serverAddr.sin_port = htons(1101);
+  serverAddr.sin_port = htons(1100);
 
   //Set IP address to localhost 
   serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
