@@ -98,6 +98,10 @@ int main(){
         else if(strcmp(buffer,"exit")==0){
             break;
         }
+        else if(strcmp(buffer,"disconnect")==0){
+            printf("your opponent has just left the game\n");
+            break;
+        }
 
         memset(&buffer, 0, sizeof(buffer));
         memset(&message, 0, sizeof (message));

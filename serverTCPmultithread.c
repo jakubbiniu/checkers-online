@@ -7,6 +7,7 @@
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
 #include<pthread.h>
+#include <signal.h>
 
 char client_message[1024];
 char buffer[1024];
@@ -19,10 +20,10 @@ int board[8][8] = {{1,-1,1,-1,1,-1,1,-1},{-1,1,-1,1,-1,1,-1,1},{1,-1,1,-1,1,-1,1
 int boards[5][8][8] = {
     {
         {0,-1,0,-1,0,-1,0,-1},
-        {-1,0,-1,0,-1,0,-1,0},
+        {-1,0,-1,0,-1,1,-1,0},
         {0,-1,0,-1,1,-1,0,-1},
         {-1,0,-1,0,-1,0,-1,0},
-        {0,-1,0,-1,2,-1,0,-1},
+        {0,-1,2,-1,0,-1,0,-1},
         {-1,0,-1,0,-1,2,-1,0},
         {0,-1,0,-1,0,-1,0,-1},
         {-1,0,-1,0,-1,0,-1,0}
@@ -69,22 +70,14 @@ int boards[5][8][8] = {
     }
 };
 
-int all_white_pawns[5]={1,12,12,12,12};
-int all_black_pawns[5]={1,12,12,12,12};
+int all_white_pawns[5]={2,12,12,12,12};
+int all_black_pawns[5]={2,12,12,12,12};
 int all_white_kings[5]={0,0,0,0,0};
 int all_black_kings[5]={0,0,0,0,0};
 
-// int x_1, x_2, y_1, y_2;
-// int white_pawns=12;
-// int black_pawns=12;
-// int white_kings=0;
-// int black_kings=0;
-// int game_over=0;
-// char x_1_char, x_2_char;
-
-int games[5] = {0, 0, 0, 0, 0};
-int to_move[5] = {0, 0, 0, 0, 0};
-int game_status[5] = {0, 0, 0, 0, 0}; //1 - white won, 2- black won, 0 - currently no winner
+int games[5] = {0, 0, 0, 0, 0}; //number of players connected to a game
+int to_move[5] = {0, 0, 0, 0, 0}; // 0 - white, 1 - black
+int game_status[5] = {0, 0, 0, 0, 0}; // 1 - white won, 2- black won, 0 - currently no winner, 3 - disconnect
 
 // funkcja przesuwająca pionki
 void move_pawn(int board[8][8], int x1, int y1, int x2, int y2){
@@ -556,6 +549,8 @@ void * socketThread(void *arg){
         strcpy(buffer, "servers are busy");
         send(newSocket, buffer, sizeof(buffer), 0);
         memset(&buffer, 0, sizeof(buffer));
+        close(newSocket);
+        pthread_exit(NULL);
     }
     else{
         strcpy(buffer, "read information");
@@ -582,14 +577,36 @@ void * socketThread(void *arg){
     memset(&buffer, 0, sizeof(buffer));
 
     for (;;){
-        if (to_move[game_num] == 0 && strcmp(color,"white")==0 && (all_white_pawns[game_num]+all_white_kings[game_num])>0 && (all_black_pawns[game_num]+all_black_kings[game_num])>0){
+        if(game_status[game_num]==3){
+            send(newSocket, "disconnect", 1024, 0);
+            game_status[game_num] = 0;
+            games[game_num] = 0;
+            all_black_kings[game_num] = 0;
+            all_black_pawns[game_num] = 12;
+            all_white_kings[game_num] = 0;
+            all_white_pawns[game_num] = 12;
+            for (int i = 0; i<8;i++){
+                for (int j = 0; j < 8;j++){
+                    boards[game_num][i][j] = board[i][j];
+                }
+            }
+            to_move[game_num] = 0;
+        }
+        else if (to_move[game_num] == 0 && strcmp(color,"white")==0 && (all_white_pawns[game_num]+all_white_kings[game_num])>0 && (all_black_pawns[game_num]+all_black_kings[game_num])>0){
             strcpy(buffer, "sending board");
             send(newSocket, buffer, sizeof(buffer), 0);
             memset(&buffer, 0, sizeof(buffer));
             send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
             if(can_any_white_jump(boards[game_num])==1){
                 send(newSocket, "insert coordinates", 1024, 0);
-                recv(newSocket, client_message, sizeof(client_message),0);
+                n = recv(newSocket, client_message, sizeof(client_message),0);
+                if(n<=0){
+                    game_status[game_num] = 3;
+                    printf("Client disconnected: %d\n", newSocket);
+                    close(newSocket);
+                    pthread_exit(NULL);
+                    break;
+                }
                 sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                 y_1 = char_to_index(x_1_char);
                 y_2 = char_to_index(x_2_char);
@@ -597,7 +614,14 @@ void * socketThread(void *arg){
                     send(newSocket, "read information", 1024, 0);
                     // send(newSocket, "wrong coordinates", 1024, 0);
                     send(newSocket, "insert coordinates", 1024, 0);
-                    recv(newSocket, client_message, sizeof(client_message),0);
+                    n = recv(newSocket, client_message, sizeof(client_message),0);
+                    if(n<=0){
+                        game_status[game_num] = 3;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }   
                     sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                     y_1 = char_to_index(x_1_char);
                     y_2 = char_to_index(x_2_char);
@@ -616,7 +640,14 @@ void * socketThread(void *arg){
                 y_1 = y_2;
                 while (can_jump_white(boards[game_num],x_1,y_1,x_1+2,y_1+2)==1 || can_jump_white(boards[game_num],x_1,y_1,x_1+2,y_1-2)==1 || can_jump_white(boards[game_num],x_1,y_1,x_1-2,y_1-2)==1 || can_jump_white(boards[game_num],x_1,y_1,x_1-2,y_1+2)==1){
                     send(newSocket, "insert jump", 1024, 0);
-                    recv(newSocket, client_message, sizeof(client_message),0);
+                    n = recv(newSocket, client_message, sizeof(client_message),0);
+                    if(n<=0){
+                        game_status[game_num] = 3;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }
                     sscanf(client_message, "%c%d",&x_2_char,&x_2);
                     y_2 = char_to_index(x_2_char);
                     if (can_jump_white(boards[game_num], x_1, y_1, x_2, y_2) == 1){
@@ -639,7 +670,14 @@ void * socketThread(void *arg){
             else{
                 while (1){
                     send(newSocket, "insert coordinates", 1024, 0);
-                    recv(newSocket, client_message, sizeof(client_message),0);
+                    n = recv(newSocket, client_message, sizeof(client_message),0);
+                    if(n<=0){
+                        game_status[game_num] = 3;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }
                     sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                     y_1 = char_to_index(x_1_char);
                     y_2 = char_to_index(x_2_char);
@@ -667,7 +705,14 @@ void * socketThread(void *arg){
             send(newSocket, boards[game_num], sizeof(boards[game_num]), 0);
             if(can_any_black_jump(boards[game_num])==1){
                 send(newSocket, "insert coordinates", 1024, 0);
-                recv(newSocket, client_message, sizeof(client_message),0);
+                n = recv(newSocket, client_message, sizeof(client_message),0);
+                if(n<=0){
+                    game_status[game_num] = 3;
+                    printf("Client disconnected: %d\n", newSocket);
+                    close(newSocket);
+                    pthread_exit(NULL);
+                    break;
+                }
                 sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                 y_1 = char_to_index(x_1_char);
                 y_2 = char_to_index(x_2_char);
@@ -675,7 +720,14 @@ void * socketThread(void *arg){
                     send(newSocket, "read information", 1024, 0);
                     send(newSocket, "wrong coordinates", 1024, 0);
                     send(newSocket, "insert coordinates", 1024, 0);
-                    recv(newSocket, client_message, sizeof(client_message),0);
+                    n = recv(newSocket, client_message, sizeof(client_message),0);
+                    if(n<=0){
+                        game_status[game_num] = 3;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }
                     sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                     y_1 = char_to_index(x_1_char);
                     y_2 = char_to_index(x_2_char);
@@ -694,7 +746,14 @@ void * socketThread(void *arg){
                 y_1 = y_2;
                 while (can_jump_black(boards[game_num],x_1,y_1,x_1+2,y_1+2)==1 || can_jump_black(boards[game_num],x_1,y_1,x_1+2,y_1-2)==1 || can_jump_black(boards[game_num],x_1,y_1,x_1-2,y_1-2)==1 || can_jump_black(boards[game_num],x_1,y_1,x_1-2,y_1+2)==1){
                     send(newSocket, "insert jump", 1024, 0);
-                    recv(newSocket, client_message, sizeof(client_message),0);
+                    n = recv(newSocket, client_message, sizeof(client_message),0);
+                    if(n<=0){
+                        game_status[game_num] = 3;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }
                     sscanf(client_message, "%c%d",&x_2_char,&x_2);
                     y_2 = char_to_index(x_2_char);
                     if (can_jump_black(boards[game_num], x_1, y_1, x_2, y_2) == 1){
@@ -717,7 +776,14 @@ void * socketThread(void *arg){
             else{
                 while (1){
                     send(newSocket, "insert coordinates", 1024, 0);
-                    recv(newSocket, client_message, sizeof(client_message),0);
+                    n = recv(newSocket, client_message, sizeof(client_message),0);
+                    if(n<=0){
+                        game_status[game_num] = 3;
+                        printf("Client disconnected: %d\n", newSocket);
+                        close(newSocket);
+                        pthread_exit(NULL);
+                        break;
+                    }
                     sscanf(client_message, "%c%d-%c%d", &x_1_char, &x_1, &x_2_char, &x_2);
                     y_1 = char_to_index(x_1_char);
                     y_2 = char_to_index(x_2_char);
@@ -791,8 +857,10 @@ void * socketThread(void *arg){
     }
         printf("Exit socketThread %d\n",newSocket);
         send(newSocket, "exit", 1024, 0);
+        close(newSocket);   
         pthread_exit(NULL);
 }
+
 
 int main(){
   int serverSocket, newSocket;
