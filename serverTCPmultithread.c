@@ -13,7 +13,7 @@ char client_message[1024];
 char buffer[1024];
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-int max_num_games = 2;
+int max_num_games = 5;
 int to_stop;
 
 int board[8][8] = {{1,-1,1,-1,1,-1,1,-1},{-1,1,-1,1,-1,1,-1,1},{1,-1,1,-1,1,-1,1,-1},{-1,0,-1,0,-1,0,-1,0},{0,-1,0,-1,0,-1,0,-1},{-1,2,-1,2,-1,2,-1,2},{2,-1,2,-1,2,-1,2,-1},{-1,2,-1,2,-1,2,-1,2}};
@@ -80,7 +80,7 @@ int games[5] = {0, 0, 0, 0, 0}; //number of players connected to a game
 int to_move[5] = {0, 0, 0, 0, 0}; // 0 - white, 1 - black
 int game_status[5] = {0, 0, 0, 0, 0}; // 1 - white won, 2- black won, 0 - currently no winner, 3 - disconnect
 
-// funkcja przesuwająca pionki
+// moving pawns
 void move_pawn(int board[8][8], int x1, int y1, int x2, int y2){
     x1--;x2--;y1--;y2--;
     int p=board[x1][y1];
@@ -88,7 +88,7 @@ void move_pawn(int board[8][8], int x1, int y1, int x2, int y2){
     board[x2][y2]=p;
 }
 
-// sprawdzanie czy dany bialy pion moze wykonac dany ruch
+// check if given white pawn can do given move
 int can_move_white(int board[8][8], int x1, int y1, int x2, int y2){
     x1=x1-1;
     x2=x2-1;
@@ -147,7 +147,7 @@ int can_move_white(int board[8][8], int x1, int y1, int x2, int y2){
     return 0;
 }
 
-// sprawdzanie czy czarny pion moze wykonać ruch
+// check if given black piece can do given move
 int can_move_black(int board[8][8], int x1, int y1, int x2, int y2){
     x1=x1-1;
     x2=x2-1;
@@ -205,7 +205,8 @@ int can_move_black(int board[8][8], int x1, int y1, int x2, int y2){
     }
     return 0;
 }
-// bicie
+
+// jumping
 void jump(int board[8][8], int x1, int y1, int x2, int y2, int *pawns, int *kings){
     x1--;
     x2--;
@@ -298,7 +299,7 @@ void jump(int board[8][8], int x1, int y1, int x2, int y2, int *pawns, int *king
     return;
 }
 
-// sprawdzanie czy dany bialy pion moze bic
+// check if given white piece can jump
 int can_jump_white(int board[8][8], int x1, int y1, int x2, int y2){
     x1--;
     x2--;
@@ -384,7 +385,7 @@ int can_jump_white(int board[8][8], int x1, int y1, int x2, int y2){
     return 0;
 }
 
-// sprawdzanie czy czarny pion moze bic
+// check if given black piece can jump
 int can_jump_black(int board[8][8], int x1, int y1, int x2, int y2){
     x1--;
     x2--;
@@ -469,7 +470,7 @@ int can_jump_black(int board[8][8], int x1, int y1, int x2, int y2){
     }
     return 0;
 }
-// sprawdzanie czy jakikolwiek bialy pion moze bic
+// check if any white piece can jump
 int can_any_white_jump(int board[8][8]){
     for (int i=1;i<9;i++){
         for (int j=1;j<9;j++){
@@ -491,7 +492,7 @@ int can_any_white_jump(int board[8][8]){
     }
     return 0;
 }
-// sprawdzanie czy jakikolwiek czarny pion moze bic
+// ckeck if any black piece can jump
 int can_any_black_jump(int board[8][8]){
     for (int i=1;i<9;i++){
         for (int j=1;j<9;j++){
@@ -518,12 +519,13 @@ int char_to_index(char c) {
     return c - 'a' + 1;
 }
 
+// handling signal
 void sigpipe_handler(int signo) {
     printf("Otrzymano sygnał SIGPIPE. Klient się odłączył.\n");
     // exit(EXIT_SUCCESS);
 }
 
-
+// function maintaining thread
 void * socketThread(void *arg){
     int newSocket = *((int *)arg);
     printf("new thread %d\n",newSocket);
@@ -890,7 +892,7 @@ void * socketThread(void *arg){
         pthread_exit(NULL);
 }
 
-
+// main function
 int main(){
 
     signal(SIGPIPE, sigpipe_handler);
