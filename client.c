@@ -40,7 +40,7 @@ void show_board(int board[8][8]){
     printf("    a   b   c   d   e   f   g   h\n");
 }
 
-int main(){
+int main(int argc, char* argv[]){
 
   char message[1024];
   char buffer[1024];
@@ -59,7 +59,7 @@ int main(){
   serverAddr.sin_port = htons(1100);
 
  //Set IP address
-  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  serverAddr.sin_addr.s_addr = inet_addr(argv[1]);
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
     //Connect the socket to the server using the address

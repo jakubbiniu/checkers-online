@@ -1,7 +1,7 @@
 # Online checkers
-Jakub Binkowski
+Jakub Binkowski 151921
 
-### Decription
+### Description
 The program enables players to play checkers online, all they need is to be conneted to the same network. It uses multithread TCP server written in C language. Every client is served in one new thread
 
 ### Server
@@ -13,6 +13,19 @@ Functions:
 
 ### Client
 TCP client gets connected and then works in an infinite loop where waits for messages from server. If the client gets any messages, then he displays the board or some information from the server. If server sends communicates that it needs player to make a move, then a client requests a player to input coordinates of a move
+
+### Communication
+When the connection is established, client is waiting in an infinite while loop for messages from server. Function which are used to communication:
+- `send` - sending data
+- `recv` - receiving data
+
+Client can get these types of messages:
+- "insert coordinates" - client has to request player to type coordinates of next move in terminal, server is waiting to receive these coordinates using `recv` function
+- "sending board" - client is waiting to get an array with the current board, server sends the board
+- "insert jump" - client has to request player to insert coordinates of next jump, server is waiting for these coordinates using `recv` function
+- "read information" - client has to receive another text information (for example about the winner) from a server, server is sending it using `send` function
+- "disconnect" - client is informed that their opponent had been disconnected, so it leaves the loop and the program finishes
+- "exit" - client is informed that the game had just finished, so it leaves the loop and exits the program
 
 ### Game implementation
 Server handles a game forcing white or black player to insert coordinates of the next move. In my checkers you always need to jump if it is possible. Kings work normally - they can move for a long distance.
@@ -31,15 +44,15 @@ All you need is gcc compiler on your computer and terminal, below simple command
 
 Compilation:
 ```bash
-gcc server.c -o server.out
-gcc client.c -o client.out
+gcc -pthread server.c -o server.out
+gcc -pthread client.c -o client.out
 ```
 Running the server:
 ```bash
 ./server.out
 ```
-Running the client:
+Running the client (ip_address is a server ip address, for example 10.0.0.1):
 ```bash
-./client.out
+./client.out ip_address
 ```
 
